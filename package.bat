@@ -1,0 +1,1 @@
+mvn -Dmaven.test.skip=true -Dhttps.protocols=TLSv1.2 package
