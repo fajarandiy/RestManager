@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class RestConnector {
 	private static Logger log = LogManager.getLogger(RestConnector.class);
 	
-	public static ResponseEntity sendRequest(Map dataMap, String authorization, HttpMethod requestMethod) {
+	public static ResponseEntity sendRequest(Map dataMap, String endPoint, String authorization, HttpMethod requestMethod) {
 		HttpHeaders requestHeaders = new HttpHeaders();
 		HttpEntity<String>  requestEntity=null;
 		ResponseEntity<Map> responseEntity = null;
@@ -57,6 +57,7 @@ public class RestConnector {
 			requestHeaders.add("Content-Type", "application/json");
 			
 		    //set body (Remapping request dataMap here)
+			checkEndPoint(endPoint, dataMap);
 			requestMap.put("code", "test");
 			ObjectMapper mapper = new ObjectMapper();
 			try {
@@ -101,5 +102,17 @@ public class RestConnector {
 			log.error("FAIL-CONNECTOR TADAPurchaseEgift with error message : " + e.getMessage(), e);
 		}		
 		return responseEntity;
+	}
+	
+	public static void checkEndPoint(String endPoint, Map dataMap) {
+		if("negativeList".equals(endPoint)) {
+			
+		}
+	}
+	
+	private static Map constructRequestDataNegativeList(Map dataMap) {
+		Map requestDataMap = new HashMap();
+		
+		return requestDataMap;
 	}
 }
