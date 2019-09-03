@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,19 +22,21 @@ import com.pikachugo.RestManager.util.ConstructDataDUKCAPIL;
 import com.pikachugo.RestManager.util.ConstructDataNegativeList;
 
 public class RestConnector {
-	private static Logger log = LogManager.getLogger(RestConnector.class);
+	private static Logger log = Logger.getLogger(RestConnector.class);
+	public static final String URI_NEGATIVE_LIST = "http://10.32.1.17/PegaAPI/api/ws/NegativeList";
+	public static final String URI_VERIFY_SELFIE = "https://sandbox.banksinarmas.com/labs/sb/kbij-service/smma-selfie-verification";
+	public static final String URI_DUKCAPIL_GET_NIK = "http://10.22.11.37:8080/umg/getNIK";
 	
-	public static ResponseEntity sendRequest(Map dataMap, String uri, String authorization, HttpMethod requestMethod) {
+	public static ResponseEntity sendRequest(Map dataMap, String uri, HttpMethod requestMethod) throws Exception {
 		HttpHeaders requestHeaders = new HttpHeaders();
-		HttpEntity<String>  requestEntity=null;
+		HttpEntity<String> requestEntity=null;
 		ResponseEntity<Map> responseEntity = null;
 		String requestBody=null;
 		Map requestMap = new HashMap();
 		
-		//configure rest
+		//configure rest template
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-		String timeoutString = "60";
-		//Timeout parameter just for development
+		String timeoutString = "60"; //Hard code 60 for development testing only
 		log.debug("timeoutString :"+timeoutString);
 		if (timeoutString== null || "".equalsIgnoreCase(timeoutString)) {
 		    requestFactory.setReadTimeout(60);
@@ -52,17 +53,14 @@ public class RestConnector {
 			//set header
 			requestHeaders = checkUriForHeaders(uri);
 			
-		    //set body (Remapping request dataMap here)
+		    //set body (Re-mapping request dataMap here)
 			requestMap = checkUri(uri, dataMap);
 			ObjectMapper mapper = new ObjectMapper();
 			try {
 				requestBody = mapper.writeValueAsString(requestMap);
-			} catch (JsonGenerationException e) {
-				log.error("FAIL-CONNECTOR with error message : " + e.getMessage(), e);
-			} catch (JsonMappingException e) {
-				log.error("FAIL-CONNECTOR with error message : " + e.getMessage(), e);
-			} catch (IOException e) {
-				log.error("FAIL-CONNECTOR with error message : " + e.getMessage(), e);
+			} catch (Exception e) {
+				log.error("Fail construct request body with error message : " + e.getMessage(), e);
+				throw new Exception(e.getMessage());
 			}
 		    
 			//set request
@@ -70,31 +68,38 @@ public class RestConnector {
 			
 			//execute
 		    try {
-		    		log.debug("Request data : " + requestBody);
-		    		responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
-	    			log.debug("Response data : "+responseEntity.getBody());
-		    } catch (HttpStatusCodeException responseException) {
-		    		log.debug("[Response data Exception : "+responseException.getStatusCode()+"] - "+ responseException.getResponseBodyAsString());
-		    		if (responseException.getStatusCode()==HttpStatus.UNAUTHORIZED) {
-					try {
-						String renewToken="new token";
-						requestHeaders.set("Authorization", renewToken);
-						requestEntity = new HttpEntity<String> (requestBody, requestHeaders);
-					    try {
-					    		log.debug("Request data : " + requestBody);
-					    		responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
-					    		log.debug("Response data : "+responseEntity.getBody());
-					    } catch (HttpStatusCodeException responseExceptionRetry) {
-					    		log.debug("[RETRY] - Response data Exception : ["+responseExceptionRetry.getStatusCode()+"] - "+ responseExceptionRetry.getResponseBodyAsString());
-					    }
-						
-					}catch(Exception ex) {
-						log.error("[RETRY] - FAIL-CONNECTOR with error message : " + ex.getMessage(), ex);
-					}
-				}
-		    }
+		    	log.debug("Request data : " + requestBody);
+		    	responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
+		    	log.debug("Response data : "+responseEntity.getBody());
+		    } catch (Exception e) {
+		    	log.error("Response data Exception : "+e.getMessage(), e.getCause());
+		    	throw new Exception(e.getMessage());
+			}
+//		    ---- Assumption if throw exception, then failed. There's no retry.
+		    
+//		    catch (HttpStatusCodeException responseException) {
+//		    	log.debug("[Response data Exception : "+responseException.getStatusCode()+"] - "+ responseException.getResponseBodyAsString());
+//		    	if (responseException.getStatusCode()==HttpStatus.UNAUTHORIZED) {
+//		    		try {
+//						String renewToken="new token";
+//						requestHeaders.set("Authorization", renewToken);
+//						requestEntity = new HttpEntity<String> (requestBody, requestHeaders);
+//					    try {
+//					    		log.debug("Request data : " + requestBody);
+//					    		responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
+//					    		log.debug("Response data : "+responseEntity.getBody());
+//					    } catch (HttpStatusCodeException responseExceptionRetry) {
+//					    		log.debug("[RETRY] - Response data Exception : ["+responseExceptionRetry.getStatusCode()+"] - "+ responseExceptionRetry.getResponseBodyAsString());
+//					    }
+//						
+//					}catch(Exception ex) {
+//						log.error("[RETRY] - FAIL-CONNECTOR with error message : " + ex.getMessage(), ex);
+//					}
+//				}
+//		    }
 		} catch (Exception e) {
-			log.error("FAIL-CONNECTOR TADAPurchaseEgift with error message : " + e.getMessage(), e);
+			log.error("Fail send request with error message : " + e.getMessage(), e);
+			throw new Exception(e.getMessage());
 		}		
 		return responseEntity;
 	}
@@ -102,11 +107,11 @@ public class RestConnector {
 	public static Map checkUri(String uri, Map dataMap) {
 		Map returnMap = new HashMap();
 		
-		if("http://10.32.1.17/PegaAPI/api/ws/NegativeList".equals(uri)) {
+		if(URI_NEGATIVE_LIST.equals(uri)) {
 			returnMap = ConstructDataNegativeList.constructRequestDataNegativeList(dataMap);
-		}else if("https://api.smma.co.id/thirdparty/1/verify-selfie/verifySelfie".equals(uri)) {
+		}else if(URI_DUKCAPIL_GET_NIK.equals(uri)) {
 			returnMap = ConstructDataDUKCAPIL.constructRequestDataDUKCAPIL(dataMap);
-		}else if("http://10.22.11.37:8080/umg/getNIK".equals(uri)) {
+		}else if(URI_VERIFY_SELFIE.equals(uri)) {
 			returnMap = ConstructDataAsliRI.constructRequestDataAsliRI(dataMap);
 		}
 		return returnMap;
@@ -115,14 +120,29 @@ public class RestConnector {
 	public static HttpHeaders checkUriForHeaders(String uri) {
 		HttpHeaders returnMap = new HttpHeaders();
 		
-		if("http://10.32.1.17/PegaAPI/api/ws/NegativeList".equals(uri)) {
+		if(URI_NEGATIVE_LIST.equals(uri)) {
 			returnMap = ConstructDataNegativeList.constructRequestHeaderNegativeList(uri);
-		}else if("https://api.smma.co.id/thirdparty/1/verify-selfie/verifySelfie".equals(uri)) {
+		}else if(URI_DUKCAPIL_GET_NIK.equals(uri)) {
 			returnMap = ConstructDataDUKCAPIL.constructRequestHeaderDUKCAPIL(uri);
-		}else if("http://10.22.11.37:8080/umg/getNIK".equals(uri)) {
+		}else if(URI_VERIFY_SELFIE.equals(uri)) {
 			returnMap = ConstructDataAsliRI.constructRequestHeaderAsliRI(uri);
 		}
 		return returnMap;
 	}
 	
+	public static void testAPIAsliRI() {
+		Map dataMap = new HashMap();
+		dataMap.put("nik", "");
+		dataMap.put("selfie_photo", "");
+		try {
+			ResponseEntity responseEntity = sendRequest(dataMap, URI_VERIFY_SELFIE, HttpMethod.POST);
+			log.debug("responseEntity : "+responseEntity.getBody());
+		} catch (Exception e) {
+			log.error("Fail verify selfie with error message : "+e.getMessage());
+		}
+	}
+	
+	public static void main(String [] args) {
+		testAPIAsliRI();
+	}
 }
