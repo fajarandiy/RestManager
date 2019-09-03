@@ -18,22 +18,19 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pikachugo.RestManager.util.ConstructDataAsliRI;
+import com.pikachugo.RestManager.util.ConstructDataDUKCAPIL;
+import com.pikachugo.RestManager.util.ConstructDataNegativeList;
 
 public class RestConnector {
 	private static Logger log = LogManager.getLogger(RestConnector.class);
 	
-	public static ResponseEntity sendRequest(Map dataMap, String endPoint, String authorization, HttpMethod requestMethod) {
+	public static ResponseEntity sendRequest(Map dataMap, String uri, String authorization, HttpMethod requestMethod) {
 		HttpHeaders requestHeaders = new HttpHeaders();
 		HttpEntity<String>  requestEntity=null;
 		ResponseEntity<Map> responseEntity = null;
-		Map requestMap = new HashMap<>();
 		String requestBody=null;
-		
-		String targetURL = "targetURL";
-		if (targetURL== null || "".equalsIgnoreCase(targetURL) || "undefined".equalsIgnoreCase(targetURL)) {
-			targetURL="http://localhost:8080";
-		}
-		log.debug("targetURL :"+targetURL);
+		Map requestMap = new HashMap();
 		
 		//configure rest
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
@@ -53,12 +50,10 @@ public class RestConnector {
 		
 		try {
 			//set header
-			requestHeaders.add("Authorization", authorization);
-			requestHeaders.add("Content-Type", "application/json");
+			requestHeaders = checkUriForHeaders(uri);
 			
 		    //set body (Remapping request dataMap here)
-			checkEndPoint(endPoint, dataMap);
-			requestMap.put("code", "test");
+			requestMap = checkUri(uri, dataMap);
 			ObjectMapper mapper = new ObjectMapper();
 			try {
 				requestBody = mapper.writeValueAsString(requestMap);
@@ -76,7 +71,7 @@ public class RestConnector {
 			//execute
 		    try {
 		    		log.debug("Request data : " + requestBody);
-		    		responseEntity = restTemplate.exchange(targetURL, requestMethod, requestEntity, Map.class);
+		    		responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
 	    			log.debug("Response data : "+responseEntity.getBody());
 		    } catch (HttpStatusCodeException responseException) {
 		    		log.debug("[Response data Exception : "+responseException.getStatusCode()+"] - "+ responseException.getResponseBodyAsString());
@@ -87,7 +82,7 @@ public class RestConnector {
 						requestEntity = new HttpEntity<String> (requestBody, requestHeaders);
 					    try {
 					    		log.debug("Request data : " + requestBody);
-					    		responseEntity = restTemplate.exchange(targetURL, requestMethod, requestEntity, Map.class);
+					    		responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
 					    		log.debug("Response data : "+responseEntity.getBody());
 					    } catch (HttpStatusCodeException responseExceptionRetry) {
 					    		log.debug("[RETRY] - Response data Exception : ["+responseExceptionRetry.getStatusCode()+"] - "+ responseExceptionRetry.getResponseBodyAsString());
@@ -104,15 +99,30 @@ public class RestConnector {
 		return responseEntity;
 	}
 	
-	public static void checkEndPoint(String endPoint, Map dataMap) {
-		if("negativeList".equals(endPoint)) {
-			
+	public static Map checkUri(String uri, Map dataMap) {
+		Map returnMap = new HashMap();
+		
+		if("http://10.32.1.17/PegaAPI/api/ws/NegativeList".equals(uri)) {
+			returnMap = ConstructDataNegativeList.constructRequestDataNegativeList(dataMap);
+		}else if("https://api.smma.co.id/thirdparty/1/verify-selfie/verifySelfie".equals(uri)) {
+			returnMap = ConstructDataDUKCAPIL.constructRequestDataDUKCAPIL(dataMap);
+		}else if("http://10.22.11.37:8080/umg/getNIK".equals(uri)) {
+			returnMap = ConstructDataAsliRI.constructRequestDataAsliRI(dataMap);
 		}
+		return returnMap;
 	}
 	
-	private static Map constructRequestDataNegativeList(Map dataMap) {
-		Map requestDataMap = new HashMap();
+	public static HttpHeaders checkUriForHeaders(String uri) {
+		HttpHeaders returnMap = new HttpHeaders();
 		
-		return requestDataMap;
+		if("http://10.32.1.17/PegaAPI/api/ws/NegativeList".equals(uri)) {
+			returnMap = ConstructDataNegativeList.constructRequestHeaderNegativeList(uri);
+		}else if("https://api.smma.co.id/thirdparty/1/verify-selfie/verifySelfie".equals(uri)) {
+			returnMap = ConstructDataDUKCAPIL.constructRequestHeaderDUKCAPIL(uri);
+		}else if("http://10.22.11.37:8080/umg/getNIK".equals(uri)) {
+			returnMap = ConstructDataAsliRI.constructRequestHeaderAsliRI(uri);
+		}
+		return returnMap;
 	}
+	
 }
