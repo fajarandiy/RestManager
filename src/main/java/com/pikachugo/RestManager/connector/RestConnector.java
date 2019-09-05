@@ -1,6 +1,5 @@
 package com.pikachugo.RestManager.connector;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,14 +7,10 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pikachugo.RestManager.util.ConstructDataAsliRI;
 import com.pikachugo.RestManager.util.ConstructDataDUKCAPIL;
@@ -36,11 +31,11 @@ public class RestConnector {
 		
 		//configure rest template
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-		String timeoutString = "60"; //Hard code 60 for development testing only
+		String timeoutString = "30000"; //Hard code 30000 for development testing only
 		log.debug("timeoutString :"+timeoutString);
 		if (timeoutString== null || "".equalsIgnoreCase(timeoutString)) {
-		    requestFactory.setReadTimeout(60);
-		    requestFactory.setConnectTimeout(60);
+		    requestFactory.setReadTimeout(30000);
+		    requestFactory.setConnectTimeout(30000);
 		}else {
 			int timeoutPurchaseParameterInt=Integer.valueOf(timeoutString);
 			log.debug("timeoutInt :"+timeoutPurchaseParameterInt);
@@ -72,7 +67,7 @@ public class RestConnector {
 		    	responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
 		    	log.debug("Response data : "+responseEntity.getBody());
 		    } catch (Exception e) {
-		    	log.error("Response data Exception : "+e.getMessage(), e.getCause());
+		    	log.error("Response data Exception : "+e.getMessage(), e);
 		    	throw new Exception(e.getMessage());
 			}
 //		    ---- Assumption if throw exception, then failed. There's no retry.
@@ -93,7 +88,7 @@ public class RestConnector {
 //					    }
 //						
 //					}catch(Exception ex) {
-//						log.error("[RETRY] - FAIL-CONNECTOR with error message : " + ex.getMessage(), ex);
+//						log.debug("[RETRY] - FAIL-CONNECTOR with error message : " + ex.getMessage(), ex);
 //					}
 //				}
 //		    }
@@ -138,11 +133,24 @@ public class RestConnector {
 			ResponseEntity responseEntity = sendRequest(dataMap, URI_VERIFY_SELFIE, HttpMethod.POST);
 			log.debug("responseEntity : "+responseEntity.getBody());
 		} catch (Exception e) {
-			log.error("Fail verify selfie with error message : "+e.getMessage());
+			log.debug("Fail verify selfie with error message : "+e.getMessage());
+		}
+	}
+	
+	public static void testAPINegativeList() {
+		Map dataMap = new HashMap();
+		dataMap.put("NIK", "3320015510720001");
+		try {
+			ResponseEntity responseEntity = sendRequest(dataMap, URI_NEGATIVE_LIST, HttpMethod.POST);
+			log.debug("responseEntity : "+responseEntity.getBody());
+		} catch (Exception e) {
+			log.debug("Fail verify selfie with error message : "+e.getMessage());
 		}
 	}
 	
 	public static void main(String [] args) {
-		testAPIAsliRI();
+		log.debug("BERHASIL NIH");
+		log.debug("yuhu");
+		testAPINegativeList();
 	}
 }
