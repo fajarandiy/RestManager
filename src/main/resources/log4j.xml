@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<!-- $Id: log4j.xml,v 1.2 2005/12/06 23:12:36 boogie Exp $ -->
+
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d %-5p [%t] %C (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+	
+	<appender name="rootfile"
+		class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="/usr/local/tomcat/log-RestManager/root.log" />
+		<param name="MaxFileSize" value="10240KB" />
+		<param name="MaxBackupIndex" value="50" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d %-5p [%t] %C (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+	
+	<appender name="RestManager"
+		class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="/usr/local/tomcat/log-RestManager/RestManager.log" />
+		<param name="MaxFileSize" value="10240KB" />
+		<param name="MaxBackupIndex" value="50" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern"
+				value="%d %-5p [%t] %C{2} (%F:%L) - %m%n" />
+		</layout>
+	</appender>
+	
+	<category name="com.pikachugo">
+		<priority value="debug" />
+		<appender-ref ref="RestManager" />
+	</category>
+	
+	<category name="org.hibernate">
+		<priority value="error" />
+		<appender-ref ref="console" />
+	</category>
+	
+	<category name="org.apache">
+		<priority value="error" />
+		<appender-ref ref="console" />
+	</category>
+	
+	<category name="org.springframework">
+		<priority value="error" />
+		<appender-ref ref="console" />
+	</category>
+	
+	<root>
+		<priority value="debug" />
+		<appender-ref ref="console" />
+		<appender-ref ref="rootfile" />
+	</root>
+
+</log4j:configuration>
