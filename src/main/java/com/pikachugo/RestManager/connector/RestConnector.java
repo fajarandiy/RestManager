@@ -15,11 +15,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pikachugo.RestManager.util.ConstructDataAsliRI;
 import com.pikachugo.RestManager.util.ConstructDataDUKCAPIL;
 import com.pikachugo.RestManager.util.ConstructDataNegativeList;
+import com.pikachugo.RestManager.util.MySSLSocketFactory;
 
 public class RestConnector {
 	private static Logger log = Logger.getLogger(RestConnector.class);
 	public static final String URI_NEGATIVE_LIST = "http://10.32.1.17/PegaAPI/api/ws/NegativeList";
-	public static final String URI_VERIFY_SELFIE = "https://sandbox.banksinarmas.com/labs/sb/kbij-service/smma-selfie-verification";
+	public static final String URI_VERIFY_SELFIE = "https://10.32.1.202/labs/sb/kyc-service/asliri-selfie-verification";
 	public static final String URI_DUKCAPIL_GET_NIK = "http://10.22.11.37:8080/umg/getNIK";
 	
 	public static ResponseEntity sendRequest(Map dataMap, String uri, HttpMethod requestMethod) throws Exception {
@@ -32,6 +33,7 @@ public class RestConnector {
 		//configure rest template
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		String timeoutString = "30000"; //Hard code 30000 for development testing only
+		requestFactory.setHttpClient(MySSLSocketFactory.getNewHttpClient());
 		log.debug("timeoutString :"+timeoutString);
 		if (timeoutString== null || "".equalsIgnoreCase(timeoutString)) {
 		    requestFactory.setReadTimeout(30000);
@@ -41,7 +43,7 @@ public class RestConnector {
 			log.debug("timeoutInt :"+timeoutPurchaseParameterInt);
 		    requestFactory.setReadTimeout(timeoutPurchaseParameterInt);
 		    requestFactory.setConnectTimeout(timeoutPurchaseParameterInt);
-		}	    
+		}
 	    RestTemplate restTemplate = new RestTemplate(requestFactory);
 		
 		try {
@@ -149,8 +151,7 @@ public class RestConnector {
 	}
 	
 	public static void main(String [] args) {
-		log.debug("BERHASIL NIH");
-		log.debug("yuhu");
-		testAPINegativeList();
+//		testAPINegativeList();
+		testAPIAsliRI();
 	}
 }
