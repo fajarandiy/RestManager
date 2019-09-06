@@ -12,6 +12,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pikachugo.RestManager.util.ConstructDataAsliRI;
 import com.pikachugo.RestManager.util.ConstructDataDUKCAPIL;
@@ -53,28 +54,15 @@ public class RestConnector {
 	    RestTemplate restTemplate = new RestTemplate(requestFactory);
 		
 		try {
-			//set header
-			requestHeaders = checkUriForHeaders(uri);
-			
 		    //set body (Re-mapping request dataMap here)
 			requestMap = checkUri(uri, dataMap);
 			log.debug("requestMap = "+requestMap);
+			
+			//set entity type either write as String or not
 			httpType=checkEntity(uri,httpType);
 			log.debug("httpType = "+httpType);
-			ObjectMapper mapper = new ObjectMapper();
 			
-			//set request
-			if("1".equals(httpType)) {
-				try {
-					requestBody = mapper.writeValueAsString(requestMap);
-				} catch (Exception e) {
-					log.error("Fail construct request body with error message : " + e.getMessage(), e);
-					throw new Exception(e.getMessage());
-				}
-				requestEntity = new HttpEntity(requestBody, requestHeaders);
-			}else {
-				requestEntity = new HttpEntity(requestMap, requestHeaders);
-			}
+			requestEntity = setEntityRequest(requestMap,httpType,uri);
 			
 		    log.debug("request Headers = "+requestHeaders);
 			//execute
@@ -157,6 +145,26 @@ public class RestConnector {
 		return returnMap;
 	}
 	
+	public static HttpEntity setEntityRequest(Map dataMap, String httpType , String uri) {
+		HttpEntity requestEntity = null;
+		HttpHeaders requestHeaders = new HttpHeaders();
+		requestHeaders = checkUriForHeaders(uri);
+		if("1".equals(httpType)) {
+			String jsonString = "";
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				jsonString = mapper.writeValueAsString(dataMap);
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return requestEntity = new HttpEntity(jsonString, requestHeaders);
+		}else {
+			return requestEntity = new HttpEntity(dataMap, requestHeaders); 
+		}
+		
+	}
+	
 	public static void testAPIAsliRI() {
 		Map dataMap = new HashMap();
 		dataMap.put("nik", "");
@@ -193,8 +201,8 @@ public class RestConnector {
 	}
 	
 	public static void main(String [] args) {
-//		testAPINegativeList();
-		testAPIAsliRI();
+		testAPINegativeList();
+		//testAPIAsliRI();
 	//	testAPILivenessCheck();
 	}
 }
