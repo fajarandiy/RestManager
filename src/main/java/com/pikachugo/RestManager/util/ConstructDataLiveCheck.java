@@ -34,7 +34,7 @@ public class ConstructDataLiveCheck {
 		    		byte[] bytes = Base64.decodeBase64(img);
 		    		temp = File.createTempFile(bytes.toString(), ".jpg");
 			    	FileUtils.writeByteArrayToFile( temp, bytes );
-			    	FileSystemResource newImage = new FileSystemResource(temp.getAbsolutePath().toString());
+			    	temp = ResizeImageUtil.resizeFile(temp , 0, 0 , 0 , null);
 			    	requestBody.add("img", new FileSystemResource(temp.getAbsolutePath().toString()));
 			    	log.debug("selesai construct");
 				} catch (Exception e) {
