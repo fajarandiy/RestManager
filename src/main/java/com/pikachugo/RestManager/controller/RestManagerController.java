@@ -25,8 +25,8 @@ public class RestManagerController extends BaseUtil {
 		Map responseMap = new HashMap();
 		try {
 			log.debug("dataMap : "+dataMap);
-			Map responseEntityLivenessCheckMap = null;
-			Map responseEntityVerifySelfie = null;
+			Map responseEntityLivenessCheckMap = new HashMap();
+			Map responseEntityVerifySelfie = new HashMap();
 			
 			try {
 				responseEntityLivenessCheckMap.putAll((Map) RestConnector.sendRequest(dataMap, RestConnector.URI_LIVENESS_CHECK, HttpMethod.POST).getBody());
