@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,16 +29,15 @@ public class RestConnector {
 	public static final String URI_LIVENESS_CHECK = "https://img.smma.co.id:8002/detect";
 	
 	public static ResponseEntity sendRequest(Map dataMap, String uri, HttpMethod requestMethod) throws Exception {
-		HttpHeaders requestHeaders = new HttpHeaders();
+//		Set default http type (application-json)	
 		String httpType = "1";
 		
-	//	HttpEntity<String> requestEntity=null;
 		HttpEntity requestEntity = null;
 		ResponseEntity<Map> responseEntity = null;
 		String requestBody=null;
 		Map requestMap = new HashMap();
 		
-		//configure rest template
+		//Configure rest template
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		String timeoutString = "30000"; //Hard code 30000 for development testing only
 		requestFactory.setHttpClient(MySSLSocketFactory.getNewHttpClient());
@@ -54,48 +54,26 @@ public class RestConnector {
 	    RestTemplate restTemplate = new RestTemplate(requestFactory);
 		
 		try {
-		    //set body (Re-mapping request dataMap here)
-			requestMap = checkUri(uri, dataMap);
-			log.debug("requestMap = "+requestMap);
+		    //Set body (Re-mapping request dataMap here)
+			requestMap = constructRequestMap(uri, dataMap);
+			log.debug("requestMap : "+requestMap);
 			
-			//set entity type either write as String or not
-			httpType=checkEntity(uri,httpType);
-			log.debug("httpType = "+httpType);
+			//Set entity type either write as a application-json or not
+			httpType=checkEntityType(uri, httpType);
+			log.debug("httpType : "+httpType);
 			
+			//Set http entity
 			requestEntity = setEntityRequest(requestMap,httpType,uri);
-			
-		    log.debug("request Headers = "+requestHeaders);
-			//execute
+		    
+		    //Execute
 		    try {
 		    	log.debug("Request data : " + requestBody);
 		    	responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
 		    	log.debug("Response data : "+responseEntity.getBody());
-		    } catch (Exception e) {
+			} catch (Exception e) {
 		    	log.error("Response data Exception : "+e.getMessage(), e);
 		    	throw new Exception(e.getMessage());
 			}
-//		    ---- Assumption if throw exception, then failed. There's no retry.
-		    
-//		    catch (HttpStatusCodeException responseException) {
-//		    	log.debug("[Response data Exception : "+responseException.getStatusCode()+"] - "+ responseException.getResponseBodyAsString());
-//		    	if (responseException.getStatusCode()==HttpStatus.UNAUTHORIZED) {
-//		    		try {
-//						String renewToken="new token";
-//						requestHeaders.set("Authorization", renewToken);
-//						requestEntity = new HttpEntity<String> (requestBody, requestHeaders);
-//					    try {
-//					    		log.debug("Request data : " + requestBody);
-//					    		responseEntity = restTemplate.exchange(uri, requestMethod, requestEntity, Map.class);
-//					    		log.debug("Response data : "+responseEntity.getBody());
-//					    } catch (HttpStatusCodeException responseExceptionRetry) {
-//					    		log.debug("[RETRY] - Response data Exception : ["+responseExceptionRetry.getStatusCode()+"] - "+ responseExceptionRetry.getResponseBodyAsString());
-//					    }
-//						
-//					}catch(Exception ex) {
-//						log.debug("[RETRY] - FAIL-CONNECTOR with error message : " + ex.getMessage(), ex);
-//					}
-//				}
-//		    }
 		} catch (Exception e) {
 			log.error("Fail send request with error message : " + e.getMessage(), e);
 			throw new Exception(e.getMessage());
@@ -103,9 +81,8 @@ public class RestConnector {
 		return responseEntity;
 	}
 	
-	public static Map checkUri(String uri, Map dataMap) {
+	public static Map constructRequestMap(String uri, Map dataMap) {
 		Map returnMap = new HashMap();
-		
 		if(URI_NEGATIVE_LIST.equals(uri)) {
 			returnMap = ConstructDataNegativeList.constructRequestDataNegativeList(dataMap);
 		}else if(URI_DUKCAPIL_GET_NIK.equals(uri)) {
@@ -118,21 +95,26 @@ public class RestConnector {
 		return returnMap;
 	}
 	
-	
-	public static String checkEntity(String uri, String httpType) {
-	
+	/**
+	 * 
+	 * @param uri Third party API URI
+	 * @param httpType (1,2)
+	 * @see <b>httpType</b> documentation :
+	 * <br>1: Application-json 
+	 * <br>2: Multipart form data
+	 * @return httpType value as a String
+	 */
+	public static String checkEntityType(String uri, String httpType) {
 		if(URI_LIVENESS_CHECK.equals(uri)) {
 			httpType = "2";
 			return httpType;
 		}else {
 			return httpType;
 		}
-		
 	}
 	
 	public static HttpHeaders checkUriForHeaders(String uri) {
 		HttpHeaders returnMap = new HttpHeaders();
-		
 		if(URI_NEGATIVE_LIST.equals(uri)) {
 			returnMap = ConstructDataNegativeList.constructRequestHeaderNegativeList(uri);
 		}else if(URI_DUKCAPIL_GET_NIK.equals(uri)) {
@@ -162,7 +144,6 @@ public class RestConnector {
 		}else {
 			return requestEntity = new HttpEntity(dataMap, requestHeaders); 
 		}
-		
 	}
 	
 	public static void testAPIAsliRI() {
@@ -203,6 +184,6 @@ public class RestConnector {
 	public static void main(String [] args) {
 		testAPINegativeList();
 		//testAPIAsliRI();
-	//	testAPILivenessCheck();
+		//testAPILivenessCheck();
 	}
 }
