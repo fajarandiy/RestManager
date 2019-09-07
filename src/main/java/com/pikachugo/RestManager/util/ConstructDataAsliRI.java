@@ -14,7 +14,7 @@ public class ConstructDataAsliRI {
 	public static Map constructRequestDataAsliRI(Map dataMap) {
 		Map requestDataMap = new HashMap();
 		String nik = (String) dataMap.get("nik");
-		String selfiePhoto = (String) dataMap.get("selfie_photo");
+		String selfiePhoto = (String) dataMap.get("img");
 		requestDataMap.put("nik", nik);
 		requestDataMap.put("selfie_photo", selfiePhoto);
 		return requestDataMap;
