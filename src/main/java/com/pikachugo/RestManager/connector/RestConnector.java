@@ -27,7 +27,7 @@ public class RestConnector {
 	public static final String URI_LIVENESS_CHECK = "https://img.smma.co.id:8002/detect";
 	
 	public static ResponseEntity sendRequest(Map dataMap, String uri, HttpMethod requestMethod) throws Exception {
-//		Set default http type (application-json)	
+//		Set default http type 1 (application-json)	
 		String httpType = "1";
 		
 		HttpEntity requestEntity = null;
