@@ -21,7 +21,7 @@ public class RestManagerController extends BaseUtil {
 	private static Logger log = Logger.getLogger(RestManagerController.class);
 	
 	@RequestMapping(value="/checkingDataPhoto", method = RequestMethod.POST)
-	public @ResponseBody ResponseEntity<Map> checkingData(@RequestBody final Map dataMap) {
+	public static @ResponseBody ResponseEntity<Map> checkingData(@RequestBody final Map dataMap) {
 		Map responseMap = new HashMap();
 		try {
 			log.debug("dataMap : "+dataMap);
