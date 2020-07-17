@@ -14,10 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 
 @SpringBootApplication
-public class ConstructDataLiveCheck {
-	private static Logger log = Logger.getLogger(ConstructDataLiveCheck.class);
+public class ConstructDataIziOCR {
+	private static Logger log = Logger.getLogger(ConstructDataIziOCR.class);
 	
-	public static LinkedMultiValueMap constructRequestDataLiveCheck(Map dataMap) {
+	public static LinkedMultiValueMap constructRequestDataIziOCR(Map dataMap) {
 		Map requestDataMap = new HashMap();
 		LinkedMultiValueMap requestBody = new LinkedMultiValueMap();
 		String img = (String) dataMap.get("img");
@@ -39,9 +39,9 @@ public class ConstructDataLiveCheck {
 		return requestBody;
 	}
 	
-	public static HttpHeaders constructRequestHeaderLiveCheck(String uri) {
+	public static HttpHeaders constructRequestHeaderIziOCR(String uri) {
 		HttpHeaders requestHeaders = new HttpHeaders();
 		requestHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 		return requestHeaders;
-    }
+	}
 }
